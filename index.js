@@ -91,59 +91,42 @@ app.post("/room/create", (req, res) => {
             res.status(400).send("Incorrect input please check and update numberofSeats, amenities and priceAnHour");
         }
     } catch (err) {
-        res.status(400).send({ "Incorrect input": "error:", err });
+        console.log(err);
+        res.status(500).send({ message: "Incorrect data", error: err });
     }
 
 })
 
-// 2. Booking a room
+// 2. Booking a room with roomid
 app.post("/roombook/:roomId", (req, res) => {
+    try {
 
-    let { roomId } = req.params
-    // console.log(roomId)
-    let order = req.body;
-    // console.log(order);
+        let { roomId } = req.params
+        // console.log(roomId)
+        let order = req.body;
+        // console.log(order);
 
-    const seletedRoom = rooms.find((val) => val.roomId == roomId)
-    // console.log("seletedRoom", seletedRoom);
-    // console.log(seletedRoom.bookedStatus);
+        const seletedRoom = rooms.find((val) => val.roomId == roomId)
+        // console.log("seletedRoom", seletedRoom);
+        // console.log(seletedRoom.bookedStatus);
 
-    if (!seletedRoom.bookedStatus) {
+        if (!seletedRoom.bookedStatus) {
 
-        seletedRoom.bookedStatus = true;
-        seletedRoom.customerName = order.customerName
-        seletedRoom.date = order.date
-        seletedRoom.startTime = order.startTime
-        seletedRoom.endTime = order.endTime
-        seletedRoom.bookingId = bookedHistory.length + 1;
-        seletedRoom.bookingDate = new Date().toLocaleString();
-        seletedRoom.bookingStatus = "successful";
+            seletedRoom.bookedStatus = true;
+            seletedRoom.customerName = order.customerName
+            seletedRoom.date = order.date
+            seletedRoom.startTime = order.startTime
+            seletedRoom.endTime = order.endTime
+            seletedRoom.bookingId = bookedHistory.length + 1;
+            seletedRoom.bookingDate = new Date().toLocaleString();
+            seletedRoom.bookingStatus = "successful";
 
-        bookedHistory.push(seletedRoom);
-        res.status(200).send({ "room booked successfully1": seletedRoom })
-    }
-    else if (seletedRoom.bookedStatus) {
-        if (seletedRoom.date !== order.date) {
+            bookedHistory.push(seletedRoom);
+            res.status(200).send({ "room booked successfully": seletedRoom })
+        }
+        else if (seletedRoom.bookedStatus) {
+            if (seletedRoom.date !== order.date) {
 
-            let book2 = { ...seletedRoom };
-
-            book2.bookedStatus = true;
-            book2.customerName = order.customerName
-            book2.date = order.date
-            book2.startTime = order.startTime
-            book2.endTime = order.endTime
-            book2.bookingId = bookedHistory.length + 1;
-            book2.bookingDate = new Date().toLocaleString();
-            book2.bookingStatus = "successful";
-
-            rooms.push(book2);
-            bookedHistory.push(book2);
-            res.status(200).send({ "room booked successfully": book2 })
-
-
-        } else if (order.startTime > seletedRoom.endTime || order.endTime < seletedRoom.startTime) {
-
-            if (order.endTime > order.startTime) {
                 let book2 = { ...seletedRoom };
 
                 book2.bookedStatus = true;
@@ -157,19 +140,42 @@ app.post("/roombook/:roomId", (req, res) => {
 
                 rooms.push(book2);
                 bookedHistory.push(book2);
-                res.status(200).send({ "room booked successfully3": book2 })
+                res.status(200).send({ "room booked successfully": book2 })
 
+
+            } else if (order.startTime > seletedRoom.endTime || order.endTime < seletedRoom.startTime) {
+
+                if (order.endTime > order.startTime) {
+                    let book2 = { ...seletedRoom };
+
+                    book2.bookedStatus = true;
+                    book2.customerName = order.customerName
+                    book2.date = order.date
+                    book2.startTime = order.startTime
+                    book2.endTime = order.endTime
+                    book2.bookingId = bookedHistory.length + 1;
+                    book2.bookingDate = new Date().toLocaleString();
+                    book2.bookingStatus = "successful";
+
+                    rooms.push(book2);
+                    bookedHistory.push(book2);
+                    res.status(200).send({ "room booked successfully": book2 })
+
+                }
+                else {
+                    res.status(400).send(`Sorry, Incorrect input please check booking time on ${order.date}`)
+                }
             }
             else {
-                res.status(400).send(`Sorry, Incorrect input please check booking time on ${order.date}`)
+                res.status(400).send("Sorry, this Room not available at this time, please check with other room or other dates")
             }
         }
         else {
-            res.status(400).send("Sorry, this Room not available at this time, please check with other room or other dates")
+            res.status(400).send("Incorrect data")
         }
-    }
-    else {
-        res.status(400).send("Incorrect data")
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: "Incorrect data", error: err });
     }
 })
 
@@ -205,7 +211,8 @@ app.get("/rooms/all", (req, res) => {
         // console.log(result);
         res.status(200).send({ "All Rooms and Booked data": result });
     } catch (err) {
-        res.status(400).send({ "error found": err })
+        console.log(err);
+        res.status(500).send({ message: "Incorrect data", error: err });
     }
 })
 
@@ -227,36 +234,42 @@ app.get("/customer/all", (req, res) => {
         // console.log(result);
         res.status(200).send({ "All customers and Booked data": result });
     } catch (err) {
-        res.status(400).send({ "error found": err })
+        console.log(err);
+        res.status(500).send({ message: "Incorrect data", error: err });
     }
 })
 
 
 // 5. api for get customer booked history with customer name
 app.get("/customerhistory/:name", (req, res) => {
-    let { name } = req.params
-    let customerHistory = bookedHistory.filter((val) => val.customerName === name)
-    // console.log(customerHistory);
-    if (customerHistory.length >= 1) {
+    try {
+        let { name } = req.params
+        let customerHistory = bookedHistory.filter((val) => val.customerName === name)
+        // console.log(customerHistory);
+        if (customerHistory.length >= 1) {
 
-        let result = customerHistory.map((val) => {
+            let history = customerHistory.map((val) => {
 
-            return {
-                "customerName": val.customerName,
-                "roomName": val.roomName,
-                "date": val.date,
-                "startTime": val.startTime,
-                "endTime": val.endTime,
-                "bookingId": val.bookingId,
-                "bookingDate": val.bookingDate,
-                "bookingStatus": val.bookingStatus,
-            }
+                return {
+                    "customerName": val.customerName,
+                    "roomName": val.roomName,
+                    "date": val.date,
+                    "startTime": val.startTime,
+                    "endTime": val.endTime,
+                    "bookingId": val.bookingId,
+                    "bookingDate": val.bookingDate,
+                    "bookingStatus": val.bookingStatus,
+                }
 
-        })
-        res.status(200).send({ "customer booked count": customerHistory.length, result });
-    }
-    else {
-        res.status(400).send(`No History available for this customer, customer booked count: ${customerHistory.length}`);
+            })
+            res.status(200).send({ "customer booked count": customerHistory.length, history });
+        }
+        else {
+            res.status(400).send(`No History available for this customer, customer booked count: ${customerHistory.length}`);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: "Incorrect data", error: err });
     }
 })
 
