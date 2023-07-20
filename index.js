@@ -88,7 +88,7 @@ app.post("/room/create", (req, res) => {
             res.status(200).send({ "room added successfully": "Hall" + (rooms.length), "roomList": rooms });
         }
         else {
-            res.status(400).send("Incorrect input please check and update numberofSeats, amenities and priceAnHour");
+            res.status(400).send("Incorrect input please check and update numberOfSeats, amenities and priceAnHour");
         }
     } catch (err) {
         console.log(err);
